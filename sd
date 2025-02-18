@@ -1,0 +1,314 @@
+#!/usr/bin/env bash
+### sd --- presentations with a directory full of text files
+
+### Requires: env,bash,sed,wc,find,cat
+
+validCmds=(""  \
+           " " \
+           "j" \
+           "n" \
+           "d" \
+           "f" \
+           "z" \
+           "k" \
+           "p" \
+           "u" \
+           "b" \
+           "g" \
+           "t" \
+           "G" \
+           "'" \
+           "\""\
+           "$" \
+           "=" \
+           "." \
+           "r" \
+           "h" \
+           "?" \
+           "q" \
+           "e")
+
+### Cleanup from prior run if necessary
+unset d lpad tpad headerFlag header s slen dollar dot mark
+unset cmdIsValid argIsValid
+
+### Functions
+catHelp(){
+  cat <<EOF 
+sd:       Move through a directory of plain text "slides" in ASCII sort order.
+Use:      sd [-l <n>] [-t <n>] [-b <str>] [-d dir]
+Options: -h or -? Show this help text.
+         -l <n>   Pad lines n spaces from the left                  (default: 0)
+         -t <n>   Pad top of every slide n lines at the top         (default: 0)
+         -b <str> Add single line str header to top line of slides (default: "")
+         -d <dir> Directory where slide files live               (default: "./")
+Commands: Enter/Return after case-sensitive commands, each 1 character, 
+   optionally followed by whitespace and an argument. Args <a>: either positive
+   int or symbolic slide number: . = current slide; $ = last slide; " = marked
+   slide (default: 1). There is only one mark, set with ' and referenced with ".
+   Commands fail if attempting a move past either end the deck.
+      SPC,RET       Next slide
+      j,n,d,f,z <a> Forward n slides          (default: 1)
+      k,p,u,b   <a> Back n slides             (default: 1)    
+      g,t       <a> Goto the nth slide        (default: 1)
+      G,$       <a> Same as g but ->          (default: $)
+      "         <a> Same as g but ->          (default: ")
+      '         <a> Mark slide <a>            (default: .)
+      =         <a> Show slide number         (default: .)
+      .,r           Redisplay current slide
+      h,?           Print this help slide
+      q,e           Quit
+EOF
+}
+
+dispSlide(){
+  clear
+  ## Get the length of what we are going to display
+  slen=$(wc -l < "$1"|sed "s/ //g")   # length of the slide
+  slen=$(( slen + tpad ))             # add any top padding
+  if [ "$headerFlag" -eq "1" ]; then  # add the header and display it
+    echo "$header"
+    slen=$(( slen + 1 ))
+  fi
+  
+  for (( i=1;i<=tpad;i++ ))           # pad top
+  do
+    echo
+  done
+    
+  sed "s/^/$(printf '%*s' "$lpad" ' ')/" "$1"
+  
+  ## Pad down to the bottom of the screen
+  ydiff=$(( nlines - slen - 1 ))
+  for (( i=1;i<=ydiff;i++ ))
+  do
+    echo
+  done
+}
+
+getCmd(){
+  read -r -a rawcmd
+  if [ "${rawcmd[0]}" == "" ]; then # Plain RET means forward 1 slide
+    cmd="j"
+  else
+    cmd="${rawcmd[0]}"
+    arg="${rawcmd[1]}"
+  fi
+  if ! validateCmd $cmd || ! validateArg $arg ; then
+    rawcmd=""
+    cmd=""
+    arg=""
+    sdError
+  else
+    dispatch "$cmd" "$arg"
+    cmd=""
+    arg=""
+    rawcmd=""
+    rawarg=""
+  fi
+}
+
+validateArg(){
+  if [[ "$1" =~ ^[0-9]+$ ]] || \
+      [ "$1" == "" ]        || \
+      [ "$1" == "$" ]       || \
+      [ "$1" == "." ]       || \
+      [ "$1" == "\"" ]; then
+    return 0 # arg is ok
+  else
+    return 1
+  fi
+}
+
+validateCmd(){
+  local b="1"
+  for c in "${validCmds[@]}"
+  do
+    if [ "$c" == "$1" ]; then
+      b=0
+    fi
+  done
+  if [ "$b" -eq "0" ]; then
+    return 0 # valid command
+  else
+    return 1
+  fi
+}
+
+dispatch(){
+  rawarg="$2" # default
+ 
+  ## Cmds without args
+  case "$1" in
+    "q" | "e")
+      sdQuit ;;
+    h | \?)
+      arg=""
+      cmd=""
+      rawarg=""
+      sdHelp ;;
+    "." | "r")
+      arg=""
+      cmd=""
+      rawarg=""
+      refresh ;;
+  esac
+      
+  ## Resolve argument
+  if   [ "$rawarg" == "." ]; then
+    rawarg=$dot
+  elif [ "$rawarg" == "$" ]; then
+    rawarg=$dollar
+  elif [ "$rawarg" == "\"" ]; then
+    rawarg=$mark
+  fi
+
+  ## Set default args if not supplied
+  if [[ "$1" =~ [jndfzkpubgt] ]] && [ "$arg" == "" ]; then
+    rawarg=1
+  fi
+  if [[ "$1" =~ [=\'] ]] && [ "$arg" == "" ]; then
+    rawarg=$dot
+  fi
+  if [[ "$1" =~ [G$] ]] && [ "$arg" == "" ]; then
+    rawarg=$dollar
+  fi
+  if [ "$1" == "\"" ] && [ "$arg" == "" ]; then
+    rawarg=$mark
+  fi
+  if [ "$1" == " " ]; then
+    cmd="j"
+    arg="1"
+  fi
+  if [ "$1" == "" ]; then
+    cmd="j"
+    arg="1"
+  fi
+
+  ## Calculate offsets for commans that use relative numbers
+  case "$1" in
+    "j" | "n" | "d" | "f" | "z")
+      rawarg=$(( dot + rawarg )) ;;
+    "k" | "p" | "u" | "b")
+      rawarg=$(( dot - rawarg )) ;;
+  esac
+
+  ## Bounds check
+  if (( rawarg < 1 )) || (( rawarg > dollar )); then
+    sdError
+    return 1
+  fi
+
+  if [ "$1" == "'" ]; then
+    setMark $rawarg
+  fi
+
+  if [ "$1" == "=" ]; then
+    equals $rawarg
+  fi
+
+  if [[ "$1" =~ [Gjndfzkpubgt$] ]]; then
+    dot=$rawarg
+    dispSlide "${s[(( rawarg - 1 ))]}"
+  fi
+}
+
+refresh(){ dispSlide "${s[(( dot - 1 ))]}"; getCmd; }
+sdHelp(){
+  clear
+  catHelp
+  ydiff=$(( nlines - 24 )) # Magic number is length of help text
+  for (( i=1;i<=ydiff;i++ ))
+  do
+    echo
+  done
+  getCmd
+}
+equals(){
+  dispSlide "${s[(( dot - 1 ))]}"
+  printf '%s ' "$1"
+  getCmd
+}
+setMark(){ mark="$1"; refresh; }
+sdQuit(){ exit; }
+sdError(){
+    arg=""
+    rawarg=""
+    cmd=""
+    dispSlide "${s[$(( dot - 1 ))]}"
+    printf "? "
+}
+### Parse command line and get env data
+
+nlines=$(tput lines) # how many lines tall is the current terminal
+
+## Defaults
+lpad=0               # pad slides n spaces to the right
+tpad=0               # pad n lines from the top
+headerFlag=0         # are we putting a one-line header on all slides?
+header=""            # if so, what is it?
+d=./                 # what is the directory containing our slides?
+dollar=1             # last slide number
+dot=1                # current slide number
+mark=1               # mark starts as 1
+rawcmd=""            # current raw command string
+cmd=""               # command 
+arg=""               # any args
+
+while :; do
+  case $1 in
+    "-?" | "-h")
+      catHelp;exit ;;
+    "-l")
+      if [ -n "$2" ]; then
+	lpad="$2";shift
+      fi ;;
+    "-t")
+      if [ -n "$2" ]; then
+	tpad="$2";shift
+      fi ;;
+    "-b")
+      if [ -n "$2" ]; then
+	header="$2";headerFlag=1;shift
+      fi ;;
+    "-d")
+      if [ -n "$2" ]; then
+	d="$2";shift
+      fi ;;
+    -?*)
+      printf 'Error (aborted) unknown option: %s\n' "$1" >&2
+      exit ;;
+    *)
+      break
+
+  esac
+  shift
+done
+
+### Main
+
+## Setup
+## Get all the $f(iles) in $d(irectory) into the $s(lides) array
+## and do some sanity checks and get the $l(ength) of the array
+## (which is the number of the last slide, $)
+if ! [ -d "${d}" ]; then
+  echo "Directory does not exist"
+  exit
+fi
+declare -a s=()
+for f in $(cd "$d";find $PWD/*);do s+=("${f}");done
+l=${#s[@]}
+if [ "${l}" -eq "0" ]; then
+  echo "Directory empty"
+  exit
+fi
+
+dollar=$l
+dispSlide "${s[(( dot - 1 ))]}" # Display the first slide when we start
+
+## Main loop
+while true 
+do
+  getCmd
+done
+

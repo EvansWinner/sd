@@ -1,0 +1,57 @@
+sd
+==
+
+[Important: commands that don't work: $, ", and who knows what else]
+
+sd (for "slide deck") is a hyper-minimal presentation program strictly
+for terminal use. It requires env, bash, sed, wc, find, and cat.
+
+sd reads plain text files from a given directory and presents them (shows
+them) in ASCII sort order.
+
+To install:
+
+ 1. Make sure sd is executable. Do something like --
+
+      $ chmod u+x sd
+
+ 2. Copy sd to somewhere in your path. You don't want to have it in the same
+    directory as the files for your presentation, because if you do, it will
+    treat sd itself as one of the slides.
+
+ 3. Type --
+ 
+      $ sd -h
+
+    at the command line to get all the documentation.
+
+ 4. Profit
+  
+
+Important notes:
+
+ 1. It is feature-complete. There will be no Markdown support, additional
+    commands, etc.
+
+ 2. I might give it a bang (!) command to run command line commands like
+    ed(1) has, but honestly, you can just do C-z to suspend it and do what-
+    ever you like, so I don't think I will. 
+
+ 3. I would have preferred to write it in pure POSIX shell, but I'm not
+    smart enough to figure out how to do arrays in POSIX shell.
+
+ 4. There is no number 4. That's it.
+
+
+Examples:
+
+Ok, I said there was a help page, but here's an example use to make it
+easier:
+
+  $ sd -t 10 -l 25 -b "My Title | J. Random Hacker | 2025-02-19" -d testExample
+
+This will pad every slide ten lines down, and 25 characters to the left. It
+will include a header or "b" for "banner" at the top of every slide, and will
+look for its slides in the "testExample" directory.
+
+
