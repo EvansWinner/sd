@@ -35,7 +35,7 @@ INSTALLATION
 NOTES
 
     1. It is feature-complete. There will be no Markdown support, additional
-       commands, etc.
+       commands, etc. Ok, so see the TODO section for a couple of things...
 
     2. Consider zooming in your terminal enough to make your text visible for
        whatever your application. Use the -t and -l flags to get things
@@ -70,6 +70,7 @@ TODO
     - `$' as command (short for `g $')
     - `"' as command (short for `g ")
     - Raw integer <n> as short for 'g <n>'
+    - I don't know. Maybe a ! command... maybe. Seems a little silly.
 
 
  ==
