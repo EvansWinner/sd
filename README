@@ -54,4 +54,9 @@ This will pad every slide ten lines down, and 25 characters to the left. It
 will include a header or "b" for "banner" at the top of every slide, and will
 look for its slides in the "testExample" directory.
 
+Once sd is running, try typing h (and enter) to get a help page. Yes, the same
+help page.
+
+Another yak, shaved.
+
 
