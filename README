@@ -18,17 +18,20 @@ INSTALLATION
 
          $ chmod u+x sd
 
-    2. Copy sd to somewhere in your path. You don't want to have it in the same
+    2. You may need to manually edit the shebang line of the script if you are
+       using it on an odd platform like, for example, Termux.
+
+    3. Copy sd to somewhere in your path. You don't want to have it in the same
        directory as the files for your presentation, because if you do, it will
        treat sd itself as one of the slides.
 
-    3. Type --
+    4. Type --
  
          $ sd -h
 
        at the command line to get the help text.
 
-    4. Profit.
+    5. Profit.
 
   
 NOTES
