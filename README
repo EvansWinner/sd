@@ -1,7 +1,7 @@
 [Important: commands that don't work: $, ", and who knows what else]
 
 NAME
-    sd -- plain-text terminal-based presentations
+    sd -- plain-text terminal-based presentations with bash
 
 
 DESCRIPTION
