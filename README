@@ -1,7 +1,7 @@
 [Important: commands that don't work: $, ", and who knows what else]
 
 NAME
-    sd
+    sd -- plain-text terminal-based presentations
 
 
 DESCRIPTION
@@ -26,9 +26,9 @@ INSTALLATION
  
          $ sd -h
 
-       at the command line to get all the documentation.
+       at the command line to get the help text.
 
-    4. Profit
+    4. Profit.
 
   
 NOTES
@@ -36,14 +36,18 @@ NOTES
     1. It is feature-complete. There will be no Markdown support, additional
        commands, etc.
 
-    2. I might give it a bang (!) command to run command line commands like
+    2. Consider zooming in your terminal enough to make your text visible for
+       whatever your application. Use the -t and -l flags to get things
+       roughly centered the way you want.
+
+    3. I might give it a bang (!) command to run command line commands like
        ed(1) has, but honestly, you can just do C-z to suspend it and do what-
        ever you like, so I don't think I will. 
 
-    3. I would have preferred to write it in pure POSIX shell, but I'm not
+    4. I would have preferred to write it in pure POSIX shell, but I'm not
        smart enough to figure out how to do arrays in POSIX shell.
 
-    4. There is no number 4. That's it.
+    5. There is no number 5. That's it.
 
 
 EXAMPLES
@@ -57,8 +61,12 @@ EXAMPLES
     will include a header or "b" for "banner" at the top of every slide, and
     will look for its slides in the "testExample" directory.
 
-    Once sd is running, try typing h (and enter) to get a help page. Yes, the
+    Once sd is running, try typing h (then Enter) to get a help page. Yes, the
     same help page.
+
+
+ ==
+
 
     Another yak, shaved.
 
