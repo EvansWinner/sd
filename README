@@ -2,12 +2,15 @@
 
 NAME
     sd
+
+
 DESCRIPTION
     sd (for "slide deck") is a hyper-minimal presentation program strictly
     for terminal use. It requires env, bash, sed, wc, find, and cat.
 
     sd reads plain text files from a given directory and presents them (shows
     them) in ASCII sort order.
+
 
 INSTALLATION
 
@@ -26,6 +29,7 @@ INSTALLATION
        at the command line to get all the documentation.
 
     4. Profit
+
   
 NOTES
 
